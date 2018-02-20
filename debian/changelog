@@ -1,3 +1,29 @@
+polychromatic (0.3.11.2-xenial) xenial; urgency=low
+
+  * Fix profile editor never being displayed.
+
+ -- Luke Horwell <luke@ubuntu-mate.org>  Sat, 30 Sep 2017 20:14:52 +0100
+
+polychromatic (0.3.11.1-xenial) xenial; urgency=low
+
+  * Update dependencies for OpenRazer. Please use ppa:openrazer/stable instead.
+  * Update error screens when initialization errors occur.
+  * Prevent a segfault with newer WebKit versions.
+  * Internal changes to how styling is compiled.
+
+ -- Luke Horwell <luke@ubuntu-mate.org>  Wed, 06 Sep 2017 21:00:00 +0100
+
+polychromatic (0.3.10-xenial) xenial; urgency=low
+
+  * Catch more exceptions.
+  * Clean up how booleans are stored interally.
+  * Internal code refactoring, namely the preferences page.
+  * No longer depends on WebKit >=2.12
+  * Prevent exception when devicestate file didn't exist.
+  * Properly add support for starlight effect.
+
+ -- Luke Horwell <luke@ubuntu-mate.org>  Thu, 10 Aug 2017 21:24:39 +0100
+
 polychromatic (0.3.9.3-xenial) xenial; urgency=low
 
   * Daemon configuration paths updated.

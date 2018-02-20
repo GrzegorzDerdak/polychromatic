@@ -8,6 +8,7 @@
 # Copyright (C) 2017 Luke Horwell <luke@ubuntu-mate.org>
 
 import os
+import sys
 import gettext
 from time import sleep
 from threading import Thread
@@ -16,17 +17,62 @@ from threading import Thread
 # (excludes Ultimate which supports shades of green)
 fixed_coloured_devices = ["Taipan"]
 
-# Use i18n translations for some strings in this module.
-whereami = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 
-if os.path.exists(os.path.join(whereami, '../locale/')):
-    locale_path = os.path.join(whereami, '../locale/')
-else:
-    locale_path = '/usr/share/locale/'
+class Debugging(object):
+    """
+    Outputs pretty debugging details to the terminal.
+    """
+    def __init__(self):
+        self.verbose_level = 0
 
-global _
-t = gettext.translation('polychromatic-common', localedir=locale_path, fallback=True)
-_ = t.gettext
+        # Colours for stdout
+        self.error = '\033[91m'
+        self.success = '\033[92m'
+        self.warning = '\033[93m'
+        self.action = '\033[93m'
+        self.debug = '\033[96m'
+        self.normal = '\033[0m'
+
+    def stdout(self, msg, colour_code='\033[0m', verbosity=0):
+        # msg           String containing message for stdout.
+        # color         stdout code (e.g. '\033[92m')
+        # verbosity     0 = Always shown
+        #               1 = -v flag
+        #               2 = -vv flag
+
+        if self.verbose_level >= verbosity:
+            # Only colourise output if running in a real terminal.
+            if sys.stdout.isatty():
+                print(colour_code + msg + '\033[0m')
+            else:
+                print(msg)
+
+
+def setup_translations(bin_path, i18n_app, locale_override=None):
+    """
+    Initalises translations for the application.
+
+    bin_path = __file__ of the application that is being executed.
+    i18n_app = Name of the application's locales.
+
+    Returns
+    """
+    whereami = os.path.abspath(os.path.join(os.path.dirname(bin_path)))
+
+    if os.path.exists(os.path.join(whereami, 'locale/')):
+        # Using relative path
+        locale_path = os.path.join(whereami, 'locale/')
+    else:
+        # Using system path or en_US if none found
+        locale_path = '/usr/share/locale/'
+
+    if locale_override:
+        t = gettext.translation(i18n_app, localedir=locale_path, fallback=True, languages=[locale_override])
+    else:
+        t = gettext.translation(i18n_app, localedir=locale_path, fallback=True)
+
+    # This is set as the app's global variable: _
+    return t.gettext
 
 
 def get_device_type(device_type):
@@ -77,6 +123,8 @@ def get_effect_state_string(string):
         return _("Breath")
     elif string == 'ripple':
         return _("Ripple")
+    elif string == 'starlight':
+        return _("Starlight")
     elif string == 'static':
         return ("Static")
     elif string == 'none':
@@ -183,6 +231,7 @@ def set_lighting_effect(pref, device_object, source, effect, fx_params=None):
                 fx.blinking(primary_red, primary_green, primary_blue)
 
         elif effect == "breath":
+            # Params: <type>
             if params:
                 if params[0] == 'random':
                     fx.breath_random()
@@ -204,6 +253,7 @@ def set_lighting_effect(pref, device_object, source, effect, fx_params=None):
             fx.pulsate(primary_red, primary_green, primary_blue)
 
         elif effect == "ripple":
+            # Params: <type>
             if params:
                 if params[0] == 'single':
                     fx.ripple(primary_red, primary_green, primary_blue, 0.01)
@@ -216,7 +266,23 @@ def set_lighting_effect(pref, device_object, source, effect, fx_params=None):
                 remember_params('random')
 
         elif effect == "starlight":
-            fx.starlight(primary_red, primary_green, primary_blue)
+            # Params: <type> [speed 1-3]
+            # TODO: Add option to set speed. Requires re-structure.
+            speed = 2 # Normal
+
+            if params:
+                if params[0] == 'single':
+                    fx.starlight_single(primary_red, primary_green, primary_blue, speed)
+
+                elif params[0] == 'dual':
+                    fx.starlight_dual(primary_red, primary_green, primary_blue,
+                                      secondary_red, secondary_green, secondary_blue, speed)
+
+                elif params[0] == 'random':
+                    fx.starlight_random(speed)
+            else:
+                fx.starlight_random(speed)
+                remember_params('random')
 
         elif effect == "static":
             fx.static(primary_red, primary_green, primary_blue)
@@ -338,15 +404,15 @@ def get_green_shades():
     like the Razer BlackWidow Ultimate.
     """
     return {
-    "1": {"name": "Green 1", "col": [0, 255, 0]},
-    "2": {"name": "Green 2", "col": [0, 225, 0]},
-    "3": {"name": "Green 3", "col": [0, 200, 0]},
-    "4": {"name": "Green 4", "col": [0, 175, 0]},
-    "5": {"name": "Green 5", "col": [0, 150, 0]},
-    "6": {"name": "Green 6", "col": [0, 125, 0]},
-    "7": {"name": "Green 7", "col": [0, 100, 0]},
-    "8": {"name": "Green 8", "col": [0, 75, 0]},
-    "9": {"name": "Green 9", "col": [0, 50, 0]},
+        "1": {"name": _("Green") + " 1", "col": [0, 255, 0]},
+        "2": {"name": _("Green") + " 2", "col": [0, 225, 0]},
+        "3": {"name": _("Green") + " 3", "col": [0, 200, 0]},
+        "4": {"name": _("Green") + " 4", "col": [0, 175, 0]},
+        "5": {"name": _("Green") + " 5", "col": [0, 150, 0]},
+        "6": {"name": _("Green") + " 6", "col": [0, 125, 0]},
+        "7": {"name": _("Green") + " 7", "col": [0, 100, 0]},
+        "8": {"name": _("Green") + " 8", "col": [0, 75, 0]},
+        "9": {"name": _("Green") + " 9", "col": [0, 50, 0]},
     }
 
 
@@ -382,12 +448,20 @@ def devicestate_monitor_thread(callback_function, file_path):
     Seperate thread for monitoring devicestate.json changes.
     See devicestate_monitor_start() for reference.
     """
+    def _init_devicestate_file():
+        if not os.path.exists(file_path):
+            with open(file_path, "a") as f:
+                f.write("{}")
+
     while True:
-        before = os.stat(file_path).st_mtime
-        sleep(1)
-        after = os.stat(file_path).st_mtime
-        if before != after:
-             callback_function()
+        try:
+            before = os.stat(file_path).st_mtime
+            sleep(1)
+            after = os.stat(file_path).st_mtime
+            if before != after:
+                 callback_function()
+        except FileNotFoundError:
+            _init_devicestate_file()
 
 
 def has_fixed_colour(device_obj):
@@ -398,3 +472,8 @@ def has_fixed_colour(device_obj):
         if device_obj.name.find(name) != -1:
             return True
     return False
+
+"""
+Module Initalization
+"""
+_ = setup_translations(__file__, "polychromatic-common")

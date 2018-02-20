@@ -18,49 +18,7 @@
  ** Functions specific to the Preferences menu.
  */
 
-function reset_all_prompt() {
-    // Expects string variable pushed: del_all_text
-    if ( confirm(del_all_text) == true ) {
-      cmd('pref-reset-all');
-    }
-}
-
-function toggle_startup(element) {
-    set_pref_chkstate('startup', 'enabled', element);
-    state = $(element).is(':checked');
-    if ( state == true ) {
-        $('.startup-options').fadeIn('fast');
-    } else {
-        $('.startup-options').fadeOut('fast');
-    }
-}
-
-$('#start-effect-dropdown').change(function() {
-    selected = $("#start-effect-dropdown option:selected").val();
-    set_pref_str('startup', 'start_effect', selected);
-    if ( selected == 'profile' ) {
-        $('#profiles-list').fadeIn('fast');
-    } else {
-        $('#profiles-list').fadeOut('fast');
-    }
-});
-
-$('#profiles-list').change(function() {
-    selected = $("#profiles-list option:selected").val();
-    set_pref_str('startup', 'start_profile', selected);
-});
-
 $(document).ready(function () {
-    // Expects string variable pushed: no_change
-    $("#start-brightness").change(function () {
-        var value = $(this).val();
-        $('#start-brightness-text').text(value + "%");
-        if (value == 0) {
-            $("#start-brightness-text").text(no_change);
-        }
-        set_pref_str('startup','start_brightness', value);
-    });
-
     // Update the icon preview / save when text box changes.
     $('#tray-icon-path').bind('input', function() {
         dialog_icon_preview('tray-icon-path');
@@ -80,20 +38,6 @@ function switchTab(id) {
 /**
  * Dialogue box for viewing change logs.
  */
-function changelog_dialog_open() {
-    $('#dialog-changelog').addClass('in');
-    $('#dialog-changelog').show();
-    $('#overlay').fadeIn('fast');
-    $('.blur-focus').addClass('blur');
-}
-
-function changelog_dialog_close() {
-    $('#dialog-changelog').addClass('out');
-    setTimeout(function(){ $('#dialog-changelog').removeClass('out').removeClass('in').hide() }, 250);
-    $('#overlay').fadeOut('fast');
-    $('.blur-focus').removeClass('blur');
-}
-
 function open_release_note(version) {
     cmd("open?https://github.com/lah7/polychromatic/releases/tag/v" + version);
 }
@@ -119,21 +63,6 @@ function save_colour(uuid) {
     var green = $.trim(raw_rgba[1]);
     var blue = $.trim(raw_rgba[2].split(")")[0]);
     cmd("pref-colour-save?" + uuid + "?" + new_name + "?" + red + "?" + green + "?" + blue)
-}
-
-/* Reset all colours confirmation */
-function del_colours_dialog_open() {
-    $('#dialog-del').addClass('in');
-    $('#dialog-del').show();
-    $('#overlay').fadeIn('fast');
-    $('.blur-focus').addClass('blur');
-}
-
-function del_colours_dialog_close() {
-    $('#dialog-del').addClass('out');
-    setTimeout(function(){ $('#dialog-del').removeClass('out').removeClass('in').hide() }, 250);
-    $('#overlay').fadeOut('fast');
-    $('.blur-focus').removeClass('blur');
 }
 
 /* For only showing relevant options for a page */

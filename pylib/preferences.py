@@ -12,11 +12,8 @@ import json
 import shutil
 import time
 
-version = 4
+version = 5
 verbose = False
-
-# For default preferences, please see:
-#   https://github.com/lah7/polychromatic/wiki/Preferences-JSON-Structure
 
 ################################################################################
 
@@ -107,7 +104,11 @@ def save_file(filepath, newdata):
     # Write new data to specified file.
     if os.access(filepath, os.W_OK):
         f = open(filepath, "w+")
-        f.write(json.dumps(newdata))
+        # Pretty save, but just the preferences.
+        if filepath == path.preferences:
+            f.write(json.dumps(newdata, sort_keys=True, indent=4))
+        else:
+            f.write(json.dumps(newdata))
         f.close()
     else:
         print(" ** Cannot write to file: " + filepath)
@@ -250,6 +251,7 @@ def upgrade_old_pref(config_version):
     Updates the configuration from previous revisions.
     """
     print(" ** Upgrading configuration from v{0} to v{1}...".format(config_version, version))
+
     if config_version < 3:
         # *** "chroma_editor" group now "editor" ***
         data = load_file(path.preferences, True)
@@ -313,6 +315,22 @@ def upgrade_old_pref(config_version):
 
         # Delete index file as no longer needed.
         os.remove(path.old_profiles)
+
+    if config_version < 5:
+        # Ensure preferences.json is clean.
+        data = load_file(path.preferences, True)
+        for key in ["activate_on_save", "live_switch", "live_preview"]:
+            try:
+                value = data["editor"][key]
+                if type(value) == str:
+                    if value in ['true', 'True']:
+                        data["editor"][key] = True
+                    else:
+                        data["editor"][key] = False
+            except Exception:
+                pass
+
+        save_file(path.preferences, data)
 
     # Ensure that new version number is written.
     pref_data = load_file(path.preferences, True)
@@ -393,9 +411,26 @@ def start_initalization():
             init_config(json_path)
 
     # Populate with defaults if none exists.
+    ## Default Preferences
+    data = load_file(path.preferences, True)
+    if len(data) <= 2:
+        default_pref = {
+            "editor": {
+                "live_switch": True,
+                "scaling": 1,
+                "live_preview": True,
+                "activate_on_save": True
+            },
+            "tray_icon": {
+                "type": "builtin",
+                "value": "0"
+            }
+        }
+        save_file(path.preferences, default_pref)
+
     ## Default Colours
     data = load_file(path.colours, True)
-    if len(data) == 0:
+    if len(data) <= 2:
         uuid = 0
         for name, red, green, blue in ["White", 255, 255, 255], ["Red", 255, 0, 0], ["Orange", 255, 165, 0], \
                                       ["Yellow", 255, 255, 0], ["Signature Green", 0, 255, 0], ["Aqua", 0, 255, 255], \
